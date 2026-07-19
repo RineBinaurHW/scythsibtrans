@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Скифо-сибирский переводчик</title>
+    <style>
+        :root {
+            --bg: #1a1b26;
+            --surface: #24283b;
+            --text: #a9b1d6;
+            --accent: #7aa2f7;
+            --green: #9ece6a;
+            --red: #f7768e;
+            --border: #3b4261;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, 'Segoe UI', 'Georgia', sans-serif;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .header {
+            text-align: center;
+            padding: 8px 0 12px;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            color: var(--accent);
+            font-family: 'Georgia', serif;
+        }
+        .header span {
+            font-size: 0.7rem;
+            color: #565f89;
+            font-style: italic;
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: -6px;
+            letter-spacing: 0.5px;
+        }
+        textarea, .output {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: 'Georgia', 'Segoe UI', serif;
+            font-size: 1rem;
+            padding: 12px;
+            resize: none;
+            outline: none;
+            transition: border 0.2s;
+        }
+        textarea:focus {
+            border-color: var(--accent);
+        }
+        textarea {
+            height: 120px;
+        }
+        .output {
+            flex: 1;
+            min-height: 100px;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.1rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex: 1;
+            min-width: 60px;
+            white-space: nowrap;
+        }
+        button:active {
+            transform: scale(0.96);
+            opacity: 0.8;
+        }
+        button.primary {
+            background: var(--accent);
+            color: #1a1b26;
+            border-color: var(--accent);
+            font-weight: 700;
+        }
+        button.green {
+            background: var(--green);
+            color: #1a1b26;
+            border-color: var(--green);
+        }
+        button.small {
+            flex: 0;
+            padding: 8px 10px;
+            font-size: 0.75rem;
+        }
+        .status {
+            font-size: 0.65rem;
+            color: #565f89;
+            text-align: center;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚔️ Скифо-сибирский</h1>
+    <span>сакский + китайский + монгольский + русский</span>
+</div>
+
+<div class="main">
+    <label>🇷🇺 Русский</label>
+    <textarea id="input" placeholder="Введите текст...&#10;Например: князь дал попу книгу"></textarea>
+
+    <div class="buttons">
+        <button class="primary" onclick="translateText()">🔹 Перевести</button>
+        <button class="small" onclick="copyOutput()">📋</button>
+        <button class="small" onclick="clearAll()">🗑</button>
+        <button class="small green" onclick="showAddDialog()">+</button>
+    </div>
+
+    <label>🏹 Скифо-сибирский</label>
+    <div class="output" id="output"></div>
+</div>
+
+<div class="status" id="status">Слов в словаре: загрузка...</div>
+
+<!-- Диалог добавления слова -->
+<div id="addDialog" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:var(--surface);padding:20px;border-radius:var(--radius);
+        width:90%;max-width:360px;display:flex;flex-direction:column;gap:10px;">
+        <h3 style="color:var(--accent);font-family:Georgia,serif;">Добавить слово</h3>
+        <input id="addRus" placeholder="Русское слово" style="background:var(--bg);color:var(--text);
+            border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
+        <input id="addSkif" placeholder="Скифо-сибирское" style="background:var(--bg);color:var(--accent);
+            border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
+        <select id="addType" style="background:var(--bg);color:var(--text);
+            border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
+            <option value="noun">существительное</option>
+            <option value="verb">глагол</option>
+            <option value="adj">прилагательное</option>
+            <option value="pron">местоимение</option>
+            <option value="prep">предлог</option>
+        </select>
+        <div style="display:flex;gap:8px;">
+            <button onclick="addWord()" class="green" style="flex:1;">Сохранить</button>
+            <button onclick="closeAddDialog()" style="flex:1;">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// СЛОВАРЬ
+// ============================================================
+const DICT = new Map([
+    // Местоимения
+    ['я', ['мä','pron']], ['ты', ['тä','pron']], ['он', ['ши','pron']],
+    ['она', ['ши','pron']], ['мы', ['äмä','pron']], ['вы', ['тäмä','pron']],
+    ['они', ['шä','pron']], ['меня', ['мäнä','pron']], ['тебя', ['тäнä','pron']],
+    ['его', ['шäнä','pron']], ['мне', ['мäнä','pron']], ['тебе', ['тäнä','pron']],
+    ['ему', ['шäнä','pron']], ['нам', ['äмāнä','pron']], ['вам', ['тäмāнä','pron']],
+    ['им', ['шāнä','pron']],
+
+    // Предлоги
+    ['в', ['-ä','prep']], ['на', ['-äна','prep']], ['с', ['-ка','prep']],
+    ['к', ['-нä','prep']], ['для', ['-нä','prep']],
+
+    // Вопросы
+    ['кто', ['чӣ','ques']], ['что', ['цӣ','ques']], ['где', ['курä','ques']],
+
+    // Глаголы
+    ['быть', ['ах','verb']], ['есть', ['äштä','verb']],
+    ['делать', ['кар','verb']], ['сделать', ['кар','verb']],
+    ['говорить', ['вāт','verb']], ['сказать', ['вāт','verb']],
+    ['идти', ['дзā','verb']], ['прийти', ['дзā','verb']],
+    ['нести', ['бар','verb']], ['везти', ['бар','verb']],
+    ['давать', ['пим','verb']], ['дать', ['пим','verb']],
+    ['видеть', ['дрӣв','verb']], ['знать', ['зāн','verb']],
+    ['любить', ['ка̄м','verb']], ['читать', ['хвар','verb']],
+    ['жить', ['джӣв','verb']], ['работать', ['кар','verb']],
+    ['строить', ['кар','verb']], ['сидеть', ['нишид','verb']],
+
+    // Существительные
+    ['человек', ['даха','noun']], ['люди', ['дахāн','noun']],
+    ['дом', ['дäм̨','noun']], ['войско', ['хӣнä','noun']],
+    ['армия', ['кӯна','noun']], ['вода', ['ӯр','noun']],
+    ['мир', ['йсамбастä','noun']], ['небо', ['асмāн','noun']],
+    ['земля', ['чарä','noun']], ['огонь', ['āтäр','noun']],
+    ['князь', ['кäнäзä','noun']], ['царь', ['хвāм̨','noun']],
+    ['хан', ['хāна','noun']], ['казак', ['казāк','noun']],
+    ['поп', ['пāп','noun']], ['враг', ['душман','noun']],
+    ['власть', ['вāт','noun']], ['народ', ['даха','noun']],
+    ['совет', ['савйет','noun']], ['союз', ['сайуз','noun']],
+    ['республика', ['рйеспубликä','noun']],
+    ['товар', ['тавāр','noun']], ['деньги', ['денгā','noun']],
+    ['хлеб', ['хлӣб','noun']], ['мясо', ['мйасā','noun']],
+    ['вино', ['вӣнā','noun']], ['книга', ['кнӣгā','noun']],
+    ['конь', ['мурӣ','noun']], ['город', ['джӣм̨','noun']],
+    ['острог', ['астрāгä','noun']], ['крепость', ['крӣпäстä','noun']],
+    ['пищаль', ['пишчāл','noun']], ['пушка', ['пушкā','noun']],
+    ['сабля', ['саблйā','noun']], ['меч', ['кйäм̨','noun']],
+    ['бог', ['бāг','noun']], ['крест', ['кристä','noun']],
+    ['река', ['рӣкā','noun']], ['лес', ['лӣс','noun']],
+    ['степь', ['хäрä','noun']], ['юрта', ['герä','noun']],
+    ['дорога', ['дарāгā','noun']],
+
+    // Сложные слова
+    ['народовластие', ['дахāвāт','noun']],
+    ['массовластие', ['дахāнвāт','noun']],
+    ['ссср', ['Сāсāр','noun']],
+
+    // Прилагательные
+    ['весь', ['виспä','adj']], ['вся', ['виспä','adj']],
+    ['хороший', ['су','adj']], ['большой', ['булäнд','adj']],
+    ['красный', ['хӣнъ','adj']], ['чёрный', ['хара','adj']],
+    ['советский', ['савйетскӣ','adj']],
+
+    // Частицы
+    ['не', ['ни','particle']], ['и', ['ва','particle']],
+    ['нет', ['ни','particle']],
+]);
+
+// Падежи
+const CASES = { nom: '', gen: '-нä', dat: '-нä', acc: '', ins: '-äна', loc: '-ä', com: '-ка' };
+const PLURAL_SUFFIX = 'āн';
+
+// Окончания глаголов
+const VERB_END = {
+    pres: { '1sg':'äм', '2sg':'äши', '3sg':'äтä', '1pl':'äман', '2pl':'äшä', '3pl':'äндä' },
+    past: { '1sg':'äм̨', '2sg':'äш', '3sg':'ä', '1pl':'äман̨', '2pl':'äшäн̨', '3pl':'äнд' },
+    imp:  { 'sg':'', 'pl':'äшä' },
+};
+
+// ============================================================
+// ПЕРЕВОДЧИК
+// ============================================================
+function lookup(word) {
+    const w = word.toLowerCase().replace(/[.,!?;:]/g, '');
+    return DICT.get(w) || null;
+}
+
+function isPlural(word) {
+    const w = word.toLowerCase();
+    return /(ы|и|ов|ев|ами|ями|ах|ях)$/.test(w);
+}
+
+function applyCase(word, caseName) {
+    const ending = CASES[caseName] || '';
+    if (!ending) return word;
+    if (/[аäāиӣуӯ]$/.test(word)) return word + ending.replace('-', '');
+    return word + ending;
+}
+
+function applyPlural(word) {
+    return word + PLURAL_SUFFIX;
+}
+
+function conjugateVerb(base, tense, person) {
+    const endings = VERB_END[tense] || VERB_END['pres'];
+    let ending = endings[person] || 'äтä';
+    if (/[аäиуāӣӯ]$/.test(base)) ending = ending.replace(/^ä/, '');
+    return base + ending;
+}
+
+function translit(word) {
+    const map = {
+        'а':'а','о':'а','е':'йе','ё':'йо','и':'и','ы':'ы','у':'у','ю':'йу','я':'йа','э':'э',
+        'б':'б','в':'в','г':'г','д':'д','ж':'ж','з':'з','к':'к','л':'л','м':'м','н':'н',
+        'п':'п','р':'р','с':'с','т':'т','ф':'ф','х':'х','ц':'ц','ч':'ч','ш':'ш','щ':'шч',
+        'ь':'','ъ':'',
+    };
+    let w = word.toLowerCase();
+    let res = '';
+    for (const c of w) res += map[c] || c;
+    if (res && !/[аеёиоуыэюяäāӣӯ]$/.test(res)) res += 'ä';
+    return res;
+}
+
+function translate(text) {
+    const words = text.trim().split(/\s+/);
+    if (!words.length || (words.length === 1 && !words[0])) return '';
+
+    const tokens = [];
+    for (const raw of words) {
+        const clean = raw.replace(/[.,!?;:]/g, '');
+        const found = lookup(clean);
+        tokens.push({
+            raw, clean,
+            saka: found ? found[0] : translit(clean),
+            type: found ? found[1] : 'unknown',
+            plural: isPlural(clean),
+        });
+    }
+
+    let subject = null, verb = null, verbTense = 'pres', verbPerson = '3sg';
+    const objects = [], locations = [];
+    let negate = false, verbIndex = -1;
+
+    for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i].type === 'verb') {
+            verbIndex = i;
+            verb = tokens[i].saka;
+            const w = tokens[i].clean;
+            if (/[л][аои]?$/.test(w) || w.endsWith('л')) verbTense = 'past';
+            if (w.endsWith('ю') || w.endsWith('у')) verbPerson = '1sg';
+            else if (w.endsWith('ешь') || w.endsWith('ишь')) verbPerson = '2sg';
+            else if (w.endsWith('ет') || w.endsWith('ит')) verbPerson = '3sg';
+            else if (w.endsWith('ем') || w.endsWith('им')) verbPerson = '1pl';
+            else if (w.endsWith('ете') || w.endsWith('ите')) verbPerson = '2pl';
+            else if (w.endsWith('ют') || w.endsWith('ут') || w.endsWith('ят') || w.endsWith('ат')) verbPerson = '3pl';
+            break;
+        }
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t.type === 'particle' && t.clean === 'не') { negate = true; continue; }
+        if (t.type === 'prep') continue;
+        if (i === verbIndex || t.type === 'verb') continue;
+
+        const prevType = i > 0 ? tokens[i-1].type : null;
+        if (prevType === 'prep') {
+            const prep = tokens[i-1].clean;
+            const prepCase = (prep === 'в' || prep === 'на') ? 'loc' :
+                             (prep === 'с') ? 'com' : 'dat';
+            let w = applyCase(t.saka, prepCase);
+            if (t.plural) w = applyPlural(w);
+            locations.push(w);
+            continue;
+        }
+
+        if (subject === null && t.type !== 'ques') {
+            subject = t.saka;
+            if (t.plural) subject = applyPlural(subject);
+            continue;
+        }
+
+        if (t.type === 'ques') {
+            if (subject === null) subject = t.saka;
+            else objects.unshift(t.saka);
+            continue;
+        }
+
+        let obj = t.saka;
+        if (t.plural) obj = applyPlural(obj);
+        objects.push(obj);
+    }
+
+    const result = [];
+    if (subject) result.push(subject);
+    result.push(...locations);
+    if (objects.length > 1) {
+        for (let i = 0; i < objects.length - 1; i++) {
+            result.push(applyCase(objects[i], 'dat'));
+        }
+    }
+    if (objects.length > 0) result.push(objects[objects.length - 1]);
+    if (negate) result.push('ни');
+    if (verb) result.push(conjugateVerb(verb, verbTense, verbPerson));
+
+    return result.join(' ');
+}
+
+// ============================================================
+// ИНТЕРФЕЙС
+// ============================================================
+function translateText() {
+    const input = document.getElementById('input').value;
+    const output = document.getElementById('output');
+    if (!input.trim()) { output.textContent = ''; return; }
+    output.textContent = translate(input);
+}
+
+function copyOutput() {
+    const text = document.getElementById('output').textContent;
+    if (text) navigator.clipboard.writeText(text).then(() => {
+        document.getElementById('status').textContent = 'Скопировано!';
+        setTimeout(() => updateStatus(), 1500);
+    });
+}
+
+function clearAll() {
+    document.getElementById('input').value = '';
+    document.getElementById('output').textContent = '';
+}
+
+function showAddDialog() {
+    document.getElementById('addDialog').style.display = 'flex';
+    document.getElementById('addRus').focus();
+}
+
+function closeAddDialog() {
+    document.getElementById('addDialog').style.display = 'none';
+}
+
+function addWord() {
+    const rus = document.getElementById('addRus').value.trim().toLowerCase();
+    const skif = document.getElementById('addSkif').value.trim();
+    const type = document.getElementById('addType').value;
+    if (rus && skif) {
+        DICT.set(rus, [skif, type]);
+        localStorage.setItem('skifo_user_dict', JSON.stringify([...DICT]));
+        updateStatus();
+        closeAddDialog();
+    }
+}
+
+function updateStatus() {
+    document.getElementById('status').textContent = `Слов в словаре: ${DICT.size}`;
+}
+
+// Загрузка пользовательского словаря
+try {
+    const saved = localStorage.getItem('skifo_user_dict');
+    if (saved) {
+        const arr = JSON.parse(saved);
+        for (const [k, v] of arr) {
+            if (!DICT.has(k)) DICT.set(k, v);
+        }
+    }
+} catch(e) {}
+
+// Живой перевод при вводе (с задержкой)
+let debounceTimer;
+document.getElementById('input').addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(translateText, 300);
+});
+
+updateStatus();
+</script>
+</body>
+  </html>
