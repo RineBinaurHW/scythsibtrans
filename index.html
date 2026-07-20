@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Скифо-сибирский переводчик</title>
+    <title>Скифо-сибирский переводчик v5.0</title>
     <style>
         :root {
             --bg: #1a1b26;
@@ -129,16 +129,51 @@
             text-align: center;
             padding: 6px;
         }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .tabs button {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 8px;
+            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .tabs button.active {
+            background: var(--accent);
+            color: #1a1b26;
+            border-color: var(--accent);
+            font-weight: 700;
+        }
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>⚔️ Скифо-сибирский</h1>
-    <span>сакский + китайский + монгольский + русский</span>
+    <h1>⚔️ Скифо-сибирский переводчик v5.0</h1>
+    <span>сакский + китайский + монгольский + русский | ә-версия</span>
 </div>
 
-<div class="main">
+<div class="tabs">
+    <button class="active" onclick="switchTab('translate')">🔹 Перевод</button>
+    <button onclick="switchTab('rules')">📖 Правила</button>
+    <button onclick="switchTab('dict')">📚 Словарь</button>
+</div>
+
+<!-- Вкладка ПЕРЕВОД -->
+<div id="tab-translate" class="tab-content active" style="display:flex;flex-direction:column;gap:10px;">
     <label>🇷🇺 Русский</label>
     <textarea id="input" placeholder="Введите текст...&#10;Например: князь дал попу книгу"></textarea>
 
@@ -153,20 +188,62 @@
     <div class="output" id="output"></div>
 </div>
 
-<div class="status" id="status">Слов в словаре: загрузка...</div>
+<!-- Вкладка ПРАВИЛА -->
+<div id="tab-rules" class="tab-content">
+    <div style="padding:10px;color:var(--text);font-size:0.85rem;line-height:1.6;">
+        <h2 style="color:var(--accent);font-size:1.1rem;margin-bottom:10px;">📖 Краткий свод правил</h2>
+
+        <h3 style="color:var(--accent);margin-top:12px;">1. Алфавит</h3>
+        <p>Стандартная кириллица + диакритика:</p>
+        <p><b>Ā ā</b> — долгое а (асм<b>ā</b>н — небо)</p>
+        <p><b>Ӣ ӣ</b> — долгое и (С<b>ӣ</b>б<b>ӣ</b>р — Сибирь)</p>
+        <p><b>Ӯ ӯ</b> — долгое у (<b>ӯ</b>р — вода)</p>
+        <p><b>Ә ә</b> — открытое э (м<b>ә</b> — я)</p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">2. Порядок слов — SOV</h3>
+        <p><b>Глагол всегда в конце!</b></p>
+        <p>Я вижу дом → М<b>ә</b> д<b>ә</b>м̨ др<b>ӣ</b>в<b>ә</b>м</p>
+        <p>Схема: <b>Подлежащее — Дополнение — Глагол</b></p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">3. Падежи (5)</h3>
+        <p>Имен. (кто?) — даха</p>
+        <p>Род.-Дат. (кого? кому?) — дахā-<b>нә</b></p>
+        <p>Твор. (кем?) — дахā-<b>әнә</b></p>
+        <p>Местн. (где?) — дәм̨-<b>ә</b></p>
+        <p>Совм. (с кем?) — дахā-<b>ка</b></p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">4. Множ. число</h3>
+        <p>Суффикс <b>-āн</b>: даха → дах<b>āн</b> (люди)</p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">5. Рода нет</h3>
+        <p><b>ши</b> = он / она / оно</p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">6. Прилагательные</h3>
+        <p>Перед сущ., не склоняются: <b>су даха</b> (хороший человек)</p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">7. Глаголы</h3>
+        <p>Наст. время: -әм, -әши, -әтә, -әман, -әшә, -әндә</p>
+        <p>Прош. время (эргатив): подлежащее в косв. падеже</p>
+        <p>Я увидел дом → М<b>әнә</b> дәм̨ дрӣв<b>ә</b></p>
+
+        <h3 style="color:var(--accent);margin-top:12px;">8. Отрицание</h3>
+        <p><b>ни</b> перед глаголом: Мә дәм̨ <b>ни</b> дрӣвәм</p>
+    </div>
+</div>
+
+<!-- Вкладка СЛОВАРЬ -->
+<div id="tab-dict" class="tab-content">
+    <input id="dictSearch" placeholder="Поиск по словарю..." style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;margin-bottom:8px;" oninput="filterDict()">
+    <div id="dictList" style="overflow-y:auto;max-height:calc(100dvh - 200px);font-size:0.8rem;"></div>
+</div>
 
 <!-- Диалог добавления слова -->
-<div id="addDialog" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:var(--surface);padding:20px;border-radius:var(--radius);
-        width:90%;max-width:360px;display:flex;flex-direction:column;gap:10px;">
+<div id="addDialog" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:var(--surface);padding:20px;border-radius:var(--radius);width:90%;max-width:360px;display:flex;flex-direction:column;gap:10px;">
         <h3 style="color:var(--accent);font-family:Georgia,serif;">Добавить слово</h3>
-        <input id="addRus" placeholder="Русское слово" style="background:var(--bg);color:var(--text);
-            border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
-        <input id="addSkif" placeholder="Скифо-сибирское" style="background:var(--bg);color:var(--accent);
-            border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
-        <select id="addType" style="background:var(--bg);color:var(--text);
-            border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
+        <input id="addRus" placeholder="Русское слово" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
+        <input id="addSkif" placeholder="Скифо-сибирское" style="background:var(--bg);color:var(--accent);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
+        <select id="addType" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.9rem;">
             <option value="noun">существительное</option>
             <option value="verb">глагол</option>
             <option value="adj">прилагательное</option>
@@ -180,28 +257,30 @@
     </div>
 </div>
 
+<div class="status" id="status">Слов в словаре: загрузка...</div>
+
 <script>
 // ============================================================
-// СЛОВАРЬ
+// СЛОВАРЬ (версия с ә)
 // ============================================================
 const DICT = new Map([
     // Местоимения
-    ['я', ['мä','pron']], ['ты', ['тä','pron']], ['он', ['ши','pron']],
-    ['она', ['ши','pron']], ['мы', ['äмä','pron']], ['вы', ['тäмä','pron']],
-    ['они', ['шä','pron']], ['меня', ['мäнä','pron']], ['тебя', ['тäнä','pron']],
-    ['его', ['шäнä','pron']], ['мне', ['мäнä','pron']], ['тебе', ['тäнä','pron']],
-    ['ему', ['шäнä','pron']], ['нам', ['äмāнä','pron']], ['вам', ['тäмāнä','pron']],
-    ['им', ['шāнä','pron']],
+    ['я', ['мә','pron']], ['ты', ['тә','pron']], ['он', ['ши','pron']],
+    ['она', ['ши','pron']], ['мы', ['әмә','pron']], ['вы', ['тәмә','pron']],
+    ['они', ['шә','pron']], ['меня', ['мәнә','pron']], ['тебя', ['тәнә','pron']],
+    ['его', ['шәнә','pron']], ['мне', ['мәнә','pron']], ['тебе', ['тәнә','pron']],
+    ['ему', ['шәнә','pron']], ['нам', ['әмāнә','pron']], ['вам', ['тәмāнә','pron']],
+    ['им', ['шāнә','pron']],
 
     // Предлоги
-    ['в', ['-ä','prep']], ['на', ['-äна','prep']], ['с', ['-ка','prep']],
-    ['к', ['-нä','prep']], ['для', ['-нä','prep']],
+    ['в', ['-ә','prep']], ['на', ['-әнә','prep']], ['с', ['-ка','prep']],
+    ['к', ['-нә','prep']], ['для', ['-нә','prep']],
 
     // Вопросы
-    ['кто', ['чӣ','ques']], ['что', ['цӣ','ques']], ['где', ['курä','ques']],
+    ['кто', ['чӣ','ques']], ['что', ['цӣ','ques']], ['где', ['курә','ques']],
 
     // Глаголы
-    ['быть', ['ах','verb']], ['есть', ['äштä','verb']],
+    ['быть', ['ах','verb']], ['есть', ['әштә','verb']],
     ['делать', ['кар','verb']], ['сделать', ['кар','verb']],
     ['говорить', ['вāт','verb']], ['сказать', ['вāт','verb']],
     ['идти', ['дзā','verb']], ['прийти', ['дзā','verb']],
@@ -214,38 +293,57 @@ const DICT = new Map([
 
     // Существительные
     ['человек', ['даха','noun']], ['люди', ['дахāн','noun']],
-    ['дом', ['дäм̨','noun']], ['войско', ['хӣнä','noun']],
+    ['дом', ['дәм̨','noun']], ['войско', ['хӣнә','noun']],
     ['армия', ['кӯна','noun']], ['вода', ['ӯр','noun']],
-    ['мир', ['йсамбастä','noun']], ['небо', ['асмāн','noun']],
-    ['земля', ['чарä','noun']], ['огонь', ['āтäр','noun']],
-    ['князь', ['кäнäзä','noun']], ['царь', ['хвāм̨','noun']],
+    ['мир', ['йсамбастә','noun']], ['небо', ['асмāн','noun']],
+    ['земля', ['чарә','noun']], ['огонь', ['āтәр','noun']],
+    ['князь', ['кәнәзә','noun']], ['царь', ['хвāм̨','noun']],
     ['хан', ['хāна','noun']], ['казак', ['казāк','noun']],
     ['поп', ['пāп','noun']], ['враг', ['душман','noun']],
     ['власть', ['вāт','noun']], ['народ', ['даха','noun']],
     ['совет', ['савйет','noun']], ['союз', ['сайуз','noun']],
-    ['республика', ['рйеспубликä','noun']],
+    ['республика', ['рйеспубликә','noun']],
     ['товар', ['тавāр','noun']], ['деньги', ['денгā','noun']],
     ['хлеб', ['хлӣб','noun']], ['мясо', ['мйасā','noun']],
     ['вино', ['вӣнā','noun']], ['книга', ['кнӣгā','noun']],
     ['конь', ['мурӣ','noun']], ['город', ['джӣм̨','noun']],
-    ['острог', ['астрāгä','noun']], ['крепость', ['крӣпäстä','noun']],
+    ['острог', ['астрāгә','noun']], ['крепость', ['крӣпәстә','noun']],
     ['пищаль', ['пишчāл','noun']], ['пушка', ['пушкā','noun']],
-    ['сабля', ['саблйā','noun']], ['меч', ['кйäм̨','noun']],
-    ['бог', ['бāг','noun']], ['крест', ['кристä','noun']],
+    ['сабля', ['саблйā','noun']], ['меч', ['кйәм̨','noun']],
+    ['бог', ['бāг','noun']], ['крест', ['кристә','noun']],
     ['река', ['рӣкā','noun']], ['лес', ['лӣс','noun']],
-    ['степь', ['хäрä','noun']], ['юрта', ['герä','noun']],
+    ['степь', ['хәрә','noun']], ['юрта', ['герә','noun']],
     ['дорога', ['дарāгā','noun']],
+    ['сибирь', ['Сӣбӣр','noun']],
+    ['язык', ['жив','noun']], ['речь', ['жив','noun']],
 
     // Сложные слова
     ['народовластие', ['дахāвāт','noun']],
     ['массовластие', ['дахāнвāт','noun']],
     ['ссср', ['Сāсāр','noun']],
+    ['поднебесная', ['Тхенāпат','noun']],
+    ['тянь', ['Тхенā','noun']],
+    ['тянься', ['Тхенāпат','noun']],
 
     // Прилагательные
-    ['весь', ['виспä','adj']], ['вся', ['виспä','adj']],
-    ['хороший', ['су','adj']], ['большой', ['булäнд','adj']],
+    ['весь', ['виспә','adj']], ['вся', ['виспә','adj']],
+    ['хороший', ['су','adj']], ['большой', ['буләнд','adj']],
     ['красный', ['хӣнъ','adj']], ['чёрный', ['хара','adj']],
     ['советский', ['савйетскӣ','adj']],
+    ['сибирский', ['сӣбӣрскӣ','adj']],
+    ['скифский', ['скифӣ','adj']],
+
+    // Боевая лексика
+    ['сука', ['кутӣ','noun']],
+    ['собака', ['кут','noun']],
+    ['сын', ['пухрә','noun']],
+    ['сукин сын', ['кутӣпухрә','noun']],
+    ['дурак', ['ахмāк','noun']],
+    ['осёл', ['хар','noun']],
+    ['заткнись', ['тыныш','verb']],
+    ['убирайся', ['кет','verb']],
+    ['чёрт', ['ләнет','noun']],
+    ['ад', ['дозах','noun']],
 
     // Частицы
     ['не', ['ни','particle']], ['и', ['ва','particle']],
@@ -253,14 +351,14 @@ const DICT = new Map([
 ]);
 
 // Падежи
-const CASES = { nom: '', gen: '-нä', dat: '-нä', acc: '', ins: '-äна', loc: '-ä', com: '-ка' };
+const CASES = { nom: '', gen: '-нә', dat: '-нә', acc: '', ins: '-әнә', loc: '-ә', com: '-ка' };
 const PLURAL_SUFFIX = 'āн';
 
 // Окончания глаголов
 const VERB_END = {
-    pres: { '1sg':'äм', '2sg':'äши', '3sg':'äтä', '1pl':'äман', '2pl':'äшä', '3pl':'äндä' },
-    past: { '1sg':'äм̨', '2sg':'äш', '3sg':'ä', '1pl':'äман̨', '2pl':'äшäн̨', '3pl':'äнд' },
-    imp:  { 'sg':'', 'pl':'äшä' },
+    pres: { '1sg':'әм', '2sg':'әши', '3sg':'әтә', '1pl':'әман', '2pl':'әшә', '3pl':'әндә' },
+    past: { '1sg':'әм̨', '2sg':'әш', '3sg':'ә', '1pl':'әман̨', '2pl':'әшән̨', '3pl':'әнд' },
+    imp:  { 'sg':'', 'pl':'әшә' },
 };
 
 // ============================================================
@@ -279,7 +377,7 @@ function isPlural(word) {
 function applyCase(word, caseName) {
     const ending = CASES[caseName] || '';
     if (!ending) return word;
-    if (/[аäāиӣуӯ]$/.test(word)) return word + ending.replace('-', '');
+    if (/[аәāиӣуӯ]$/.test(word)) return word + ending.replace('-', '');
     return word + ending;
 }
 
@@ -289,8 +387,8 @@ function applyPlural(word) {
 
 function conjugateVerb(base, tense, person) {
     const endings = VERB_END[tense] || VERB_END['pres'];
-    let ending = endings[person] || 'äтä';
-    if (/[аäиуāӣӯ]$/.test(base)) ending = ending.replace(/^ä/, '');
+    let ending = endings[person] || 'әтә';
+    if (/[аәиуāӣӯ]$/.test(base)) ending = ending.replace(/^ә/, '');
     return base + ending;
 }
 
@@ -304,7 +402,7 @@ function translit(word) {
     let w = word.toLowerCase();
     let res = '';
     for (const c of w) res += map[c] || c;
-    if (res && !/[аеёиоуыэюяäāӣӯ]$/.test(res)) res += 'ä';
+    if (res && !/[аеёиоуыэюяәāӣӯ]$/.test(res)) res += 'ә';
     return res;
 }
 
@@ -396,6 +494,14 @@ function translate(text) {
 // ============================================================
 // ИНТЕРФЕЙС
 // ============================================================
+function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'dict') renderDict();
+}
+
 function translateText() {
     const input = document.getElementById('input').value;
     const output = document.getElementById('output');
@@ -407,7 +513,7 @@ function copyOutput() {
     const text = document.getElementById('output').textContent;
     if (text) navigator.clipboard.writeText(text).then(() => {
         document.getElementById('status').textContent = 'Скопировано!';
-        setTimeout(() => updateStatus(), 1500);
+        setTimeout(updateStatus, 1500);
     });
 }
 
@@ -437,6 +543,25 @@ function addWord() {
     }
 }
 
+function renderDict(filter = '') {
+    const container = document.getElementById('dictList');
+    let html = '';
+    const sorted = [...DICT].sort((a, b) => a[0].localeCompare(b[0]));
+    for (const [k, v] of sorted) {
+        if (filter && !k.toLowerCase().includes(filter) && !v[0].toLowerCase().includes(filter)) continue;
+        html += `<div style="padding:4px 0;border-bottom:1px solid var(--border);">
+            <span style="color:var(--text);">${k}</span>
+            <span style="color:#565f89;font-size:0.7rem;">[${v[1]}]</span>
+            <span style="color:var(--accent);float:right;">${v[0]}</span>
+        </div>`;
+    }
+    container.innerHTML = html || '<p style="color:#565f89;">Ничего не найдено</p>';
+}
+
+function filterDict() {
+    renderDict(document.getElementById('dictSearch').value.toLowerCase());
+}
+
 function updateStatus() {
     document.getElementById('status').textContent = `Слов в словаре: ${DICT.size}`;
 }
@@ -452,7 +577,7 @@ try {
     }
 } catch(e) {}
 
-// Живой перевод при вводе (с задержкой)
+// Живой перевод
 let debounceTimer;
 document.getElementById('input').addEventListener('input', () => {
     clearTimeout(debounceTimer);
@@ -460,6 +585,7 @@ document.getElementById('input').addEventListener('input', () => {
 });
 
 updateStatus();
+renderDict();
 </script>
 </body>
-  </html>
+</html>
